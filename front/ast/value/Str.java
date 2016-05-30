@@ -3,7 +3,7 @@ package front.ast.value;
 import front.ast.Type;
 
 public class Str extends Value{
-    String value;
+    public String value;
 
     public Str(String value) {
         this.value = value;

@@ -1,7 +1,7 @@
 package front.ast.judge;
 
 public class Negative extends Judge {
-    Judge follow;
+    public Judge follow;
 
     public Negative(Judge follow) {
         this.follow = follow;

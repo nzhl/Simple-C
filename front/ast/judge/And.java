@@ -1,8 +1,8 @@
 package front.ast.judge;
 
 public class And extends Judge {
-    Judge left;
-    Judge right;
+    public Judge left;
+    public Judge right;
 
     public And(Judge left, Judge right) {
         this.left = left;

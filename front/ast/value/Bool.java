@@ -3,7 +3,7 @@ package front.ast.value;
 import front.ast.Type;
 
 public class Bool extends Value{
-    Boolean value;
+    public Boolean value;
 
     public Bool(String value) {
         if(value.equals("True")){
@@ -16,6 +16,10 @@ public class Bool extends Value{
 
     @Override
     public String toString() {
-        return value + "";
+        if(value){
+            return "True";
+        }else{
+            return "False";
+        }
     }
 }

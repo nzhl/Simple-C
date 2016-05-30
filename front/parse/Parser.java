@@ -366,52 +366,56 @@ public class Parser {
 
     //---------------------------------------  pretty print ---------------------------------------------
 
-    public void printFun(){
+    static public void printFun(Fun fun){
         Fun cur = fun;
         while(cur != null){
             System.out.println(cur.type + " " + cur.id + "()" + "{");
-            printStmt(cur.stmt);
+            printStmts(cur.stmt);
             System.out.println("}");
             cur = cur.next;
         }
     }
 
-    private void printStmt(Stmt stmt){
+    static private void printStmts(Stmt stmt){
         while(stmt != null){
-            switch (stmt.kind){
-                case AssignStmt:
-                    Assign assign = (Assign)stmt;
-                    System.out.println(assign.getId() + " = " + assign.getJudge());
-                    break;
-                case DefStmt:
-                    Def def = (Def)stmt;
-                    System.out.println(def.getId() + " = " + def.getJudge());
-                    break;
-                case IfStmt:
-                    If iff = (If) stmt;
-                    System.out.println("if(" + iff.getCondition() + "){");
-                    printStmt(iff.getThen());
-                    System.out.println("}");
-                    System.out.println("else{");
-                    printStmt(iff.getOtherwise());
-                    System.out.println("}");
-                    break;
-                case WhileStmt:
-                    While wh = (While)stmt;
-                    System.out.println("while(" + wh.getCondition() + "){");
-                    printStmt(wh.getThen());
-                    System.out.println("}");
-                    break;
-                case PrintStmt:
-                    Print print = (Print)stmt;
-                    String str = "print : ";
-                    if(print.getInnerType() == Print.InnerType.Pid) {
-                        str += "id :";
-                    }
-                    str += print.getName();
-                    System.out.println(str);
-            }
+            printStmt(stmt);
             stmt = stmt.next;
+        }
+    }
+
+    static public void printStmt(Stmt stmt){
+        switch (stmt.kind){
+            case AssignStmt:
+                Assign assign = (Assign)stmt;
+                System.out.println(assign.getId() + " = " + assign.getJudge());
+                break;
+            case DefStmt:
+                Def def = (Def)stmt;
+                System.out.println(def.getId() + " = " + def.getJudge());
+                break;
+            case IfStmt:
+                If iff = (If) stmt;
+                System.out.println("if(" + iff.getCondition() + "){");
+                printStmts(iff.getThen());
+                System.out.println("}");
+                System.out.println("else{");
+                printStmts(iff.getOtherwise());
+                System.out.println("}");
+                break;
+            case WhileStmt:
+                While wh = (While)stmt;
+                System.out.println("while(" + wh.getCondition() + "){");
+                printStmts(wh.getThen());
+                System.out.println("}");
+                break;
+            case PrintStmt:
+                Print print = (Print)stmt;
+                String str = "print : ";
+                if(print.getInnerType() == Print.InnerType.Pid) {
+                    str += "id :";
+                }
+                str += print.getName();
+                System.out.println(str);
         }
     }
 }
