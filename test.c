@@ -1,1 +1,80 @@
-int main1(){     print "这是函数1.....";     int x = 1;     while(x < 10){         print x;         x = x + 1;     } }  int main2(){     print " ";     print " ";     print " ";     print " ";     print "这是函数2.....";     print "上面和下面的变量属于同一个命名空间, 所以再重复定义x会报错...";     int y = 1;     int z = 2;     if(y > z){         print "不可能执行这里!";     }else {         print "没错就是这里";         if(y == 1){             print "支持if嵌套";         }     } }
+class Main inherits IO {
+      main() : SELF_TYPE {
+    (let c : Complex <- (new Complex).init(1, 1) in
+  	    {
+  	        -- trivially equal (see CoolAid)
+  	        if c.reflect_X() = c.reflect_0()
+  	        then out_string("passed\n")
+  	        else out_string("failed\n")
+  	        fi;
+  		-- equal
+  	        if c.reflect_X().reflect_Y().equal(c.reflect_0())
+  	        then out_string("passed\n")
+  	        else out_string("failed\n")
+  	        fi;
+  	    }
+  	)
+      };
+  };
+
+  class Complex inherits IO {
+      x : Int;
+      y : Int;
+
+      init(a : Int, b : Int) : Complex {
+  	{
+  	    x <- a;
+  	    y <- b;
+  	    self;
+  	}
+      };
+
+      print() : Object {
+  	if y = 0
+  	then out_int(x)
+  	else out_int(x).out_string("+").out_int(y).out_string("I")
+  	fi
+      };
+
+      reflect_0() : Complex {
+  	{
+  	    x <- ~x;
+  	    y <- ~y;
+  	    self;
+  	}
+      };
+
+      reflect_X() : Complex {
+  	{
+  	    y <- ~y;
+  	    self;
+  	}
+      };
+
+      reflect_Y() : Complex {
+  	{
+  	    x <- ~x;
+  	    self;
+  	}
+      };
+
+      equal(d : Complex) : Bool {
+  	if x = d.x_value()
+  	then
+  	    if y = d.y_value()
+  	    then true
+  	    else false
+  	    fi
+  	else false
+  	fi
+      };
+
+      x_value() : Int {
+  	x
+      };
+
+      y_value() : Int {
+  	y
+      };
+  };
+

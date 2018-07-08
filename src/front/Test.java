@@ -16,22 +16,23 @@ public class Test {
     public static void main(String[] args) throws IOException, LexException, ParseException, TypeException {
 
         //----------------------  part 1 ----------------------------\\
-        File fh = new File("/Users/zhangzhimin/test.c");
+        File fh = new File("./test.c");
         Lexer lexer = new Lexer(new FileReader(fh));
         lexer.lex();
+        lexer.print();
 
         //----------------------  part 2 ----------------------------\\
 
-        Parser parser = new Parser(lexer.getTokens());
-        Fun fun = parser.parse();
-        Parser.printFun(fun);
-
-        System.out.println("\n----------------------------------------------------\n");
-
-        //----------------------  part 3 ----------------------------\\
-
-        TypeCheck typeCheck = new TypeCheck(fun);
-        typeCheck.funCheck();
+//        Parser parser = new Parser(lexer.getTokens());
+//        Fun fun = parser.parse();
+//        Parser.printFun(fun);
+//
+//        System.out.println("\n----------------------------------------------------\n");
+//
+//        //----------------------  part 3 ----------------------------\\
+//
+//        TypeCheck typeCheck = new TypeCheck(fun);
+//        typeCheck.funCheck();
 
     }
 }

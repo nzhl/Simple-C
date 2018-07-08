@@ -23,37 +23,35 @@ public class Interpreter {
             System.out.println("----------------->   Check your syntax ...");
             Lexer lexer = new Lexer(new FileReader(fh));
             lexer.lex();
+//            System.out.println("----------------->   Finish ...\n\n\n");
+//            System.out.println("----------------->   Generate the abstract syntax tree ...");
+//            Parser parser = new Parser(lexer.getTokens());
+//            Fun fun = parser.parse();
+//            System.out.println("----------------->   Finish ...\n\n\n");
+//            TypeCheck typeCheck = new TypeCheck(fun);
+//            System.out.println("----------------->   Type check ...");
+//            typeCheck.funCheck();
             //Thread.sleep(1000);
-            System.out.println("----------------->   Finish ...\n\n\n");
-            System.out.println("----------------->   Generate the abstract syntax tree ...");
-            Parser parser = new Parser(lexer.getTokens());
-            Fun fun = parser.parse();
-            //Thread.sleep(1000);
-            System.out.println("----------------->   Finish ...\n\n\n");
-            TypeCheck typeCheck = new TypeCheck(fun);
-            System.out.println("----------------->   Type check ...");
-            typeCheck.funCheck();
-            //Thread.sleep(1000);
-            System.out.println("----------------->   Have generated the aim code successfully !!!");
+//            System.out.println("----------------->   Have generated the aim code successfully !!!");
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (LexException e) {
             e.printStackTrace();
             System.err.println("Please correct your code !");
-        } catch (ParseException e) {
-            e.printStackTrace();
-            System.err.println("Please correct your code !");
-        } catch (TypeException e) {
-            e.printStackTrace();
-            System.err.println("Please correct your code !");
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//            System.err.println("Please correct your code !");
+//        } catch (TypeException e) {
+//            e.printStackTrace();
+//            System.err.println("Please correct your code !");
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
         }
 
-        System.out.println("\n\n-----------------   Running result   ----------------- \n\n");
+//        System.out.println("\n\n-----------------   Running result   ----------------- \n\n");
 
-        StackMachine.run();
+//        StackMachine.run();
     }
 
 }

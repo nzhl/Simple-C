@@ -1,26 +1,28 @@
 package front.lex;
 
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.util.ArrayList;
 
 public class Lexer{
-    private static final int BufMaxLen = 256;
-    private int bufLen;
-    private char[] buffer = new char[BufMaxLen];
-    private int cursor;   // -------------------------->  the current lexing pos from buffer
-    private Reader reader;
-    private int line;
-    private int pos;
-    private StringBuilder sb = new StringBuilder();
-    private boolean EOF = false;
 
-    public ArrayList<Token> tokens = new ArrayList<>();
+    private static final int MAX_BUF_LEN = 256;
+    private char[] buffer = new char[MAX_BUF_LEN];
+    private int bufLen;
+    /**
+     * the current lexing column from buffer
+     */
+    private int cursor;
+    private Reader reader;
+    private int row;
+    private int column;
+    private boolean eof = false;
+
+    private ArrayList<Token> tokens = new ArrayList<>();
 
     public Lexer(Reader reader){
         this.reader = reader;
-        line = 1;
-        pos = 1;
+        row = 1;
+        column = 1;
         cursor = 0;
     }
 
@@ -28,40 +30,61 @@ public class Lexer{
      * when all the chars in the buffer has been analysed,  refresh the buffer to get more chars...
      */
     private void refresh() throws IOException {
-        bufLen = reader.read(buffer, 0, BufMaxLen);
+        bufLen = reader.read(buffer, 0, MAX_BUF_LEN);
         if(bufLen == -1){
-            EOF = true;
+            eof = true;
         }
         cursor = 0;
     }
-    private int nextChar() throws IOException {
+    private char getNext() throws IOException {
         if(cursor == bufLen){
             refresh();
         }
 
-        if(!EOF) {
+        if(!eof) {
             return buffer[cursor++];
         }else{
-            return -1;
+            return 0;
+        }
+    }
+    private char peekNext() throws IOException {
+        if(cursor == bufLen){
+            refresh();
+        }
+
+        if(!eof) {
+            return buffer[cursor];
+        }else{
+            return 0;
         }
     }
 
     private void eatSpace() throws IOException {
-        int ch;
         while(true){
-            ch = nextChar();
-            if(ch == -1){
-                EOF = true;
+            char ch = getNext();
+            if(eof){
                 return;
             }else if(ch == '\n'){
-                line++;
-                pos = 1;
-            }else if(Character.isWhitespace((char)ch)){
-                pos++;
+                row++;
+                column = 1;
+            }else if(Character.isWhitespace(ch)){
+                column++;
             }else {
                 cursor--;
                 return;
             }
+        }
+    }
+
+    private void lexInlineComment() throws IOException {
+        while (true) {
+            char ch = getNext();
+            if (ch == '\n') {
+                row++;
+                column = 1;
+                return;
+            }
+            column++;
         }
     }
 
@@ -73,207 +96,137 @@ public class Lexer{
         return ch >= '0' && ch <= '9';
     }
 
-    private boolean isLogicalOperator(char ch){
-        return ch == '=' || ch == '>' || ch == '<' || ch == '!';
-    }
-
-    private boolean isArithmeticOperator(char ch){
-        return ch == '+' || ch == '-' || ch == '*' || ch == '/';
-    }
-
-    private void strGenerate() throws IOException, LexException {
+    private void lexString() throws IOException, LexException {
+        StringBuilder sb = new StringBuilder();
         boolean escape = false;
-        nextChar();             // ---> ignore the left quote
-        int ch;
-        while(true){
-            ch = nextChar();
-            pos++;
-            if(ch == -1 || (char)ch == '\n') {
-                throw new LexException("expected \" in line : " + line + " pos : " + pos + " !");
-            }else if((char)ch == '"' && !escape){
-                tokens.add(new Token(Token.Type.STR ,sb.toString(), line, pos-1));
-                sb = new StringBuilder();
-                return;
-            }else if((char)ch == '\\'){
-                pos--;
-                escape = true;
-            }else{
-                escape = false;
-                sb.append((char)ch);
+        while(true) {
+            char ch = getNext();
+            column++;
+            if (eof) {
+                throw new LexException("unexpected eof in row : " + row + " column : " + column + " !");
             }
-        }
-    }
-
-    private void numGenerate() throws IOException, LexException {
-        int ch;
-        while(true){
-            ch = nextChar();
-            if(ch == -1) {
-                throw new LexException("unexpected EOF in line : " + line + " pos : " + pos + " !");
-            } else if(isNumber((char)ch)){
-                pos++;
-                sb.append((char)ch);
-            } else{
-                cursor--;
-                tokens.add(new Token(Token.Type.NUM, sb.toString(), line, pos));
-                sb = new StringBuilder();
-                return;
-            }
-        }
-    }
-
-    private void idGenerate() throws LexException, IOException {
-        int ch;
-        while(true){
-            ch = nextChar();
-            if(ch == -1){
-                throw new LexException("unexpected EOF in line : " + line + " pos : " + pos + " !");
-            }else if(isIdentifier((char)ch)){
-                pos++;
-                sb.append((char)ch);
-            }else{
-                cursor--;
-                tokens.add(new Token(Token.Type.ID, sb.toString(), line, pos));
-                sb = new StringBuilder();
-                return;
-            }
-        }
-    }
-
-    private void logGenerator() throws IOException {
-        int temp1;
-        int temp2;
-        temp1 = nextChar();
-        temp2 = nextChar();
-        if(temp1 == '='){
-            if(temp2 == '='){
-                pos += 2;
-                tokens.add(new Token(Token.Type.LOP, "==", line, pos));
-            }else{
-                cursor--;
-                pos++;
-                tokens.add(new Token(Token.Type.ASSIGN, "=", line, pos));
-            }
-        }else if(temp1 == '>'){
-            if(temp2 == '='){
-                pos += 2;
-                tokens.add(new Token(Token.Type.ROP, ">=", line, pos));
-            }else{
-                cursor--;
-                pos++;
-                tokens.add(new Token(Token.Type.ROP, ">", line, pos));
-            }
-        }else if(temp1 == '<') {
-            if (temp2 == '=') {
-                pos += 2;
-                tokens.add(new Token(Token.Type.ROP, "<=", line, pos));
+            if (!escape) {
+                if (ch == '\n') {
+                    throw new LexException("unexpected \\n in row : " + row + " column : " + column + " !");
+                }
+                if (ch == '"') {
+                    tokens.add(new Token(Token.Type.STRING, sb.toString(), row, column));
+                    return;
+                }
+                if (ch == '\\') {
+                    escape = true;
+                }
+                sb.append(ch);
             } else {
-                cursor--;
-                pos++;
-                tokens.add(new Token(Token.Type.ROP, "<", line, pos));
+                if (ch == '\n') {
+                    row++;
+                    column = 1;
+                    sb.deleteCharAt(sb.length() - 1);
+                } else {
+                    sb.append(ch);
+                }
+                escape = false;
             }
-        }else if(temp1 == '!'){
-            if(temp2 == '='){
-                pos += 2;
-                tokens.add(new Token(Token.Type.LOP, "!=", line, pos));
+        }
+    }
+
+    private void lexNumber(char ch0) throws IOException, LexException {
+        int num = ch0 - '0';
+        while(true){
+            char ch = getNext();
+            if(eof) {
+                throw new LexException("unexpected eof in row : " + row + " column : " + column + " !");
+            } else if(isNumber(ch)){
+                column++;
+                num = num * 10 + (ch - '0');
             } else{
                 cursor--;
-                pos++;
-                tokens.add(new Token(Token.Type.LOP, "!", line, pos));
+                tokens.add(new Token(num, row, column));
+                return;
             }
         }
     }
 
-    private void ariGenerator() throws IOException {
-        int ch = nextChar();
-        pos++;
-        switch ((char)ch){
-            case '+':
-                tokens.add(new Token(Token.Type.AOP, "+", line, pos));
+    private void lexID(char ch0) throws LexException, IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ch0);
+        while(true){
+            char ch = getNext();
+            if(eof){
+                throw new LexException("unexpected eof in row : " + row + " column : " + column + " !");
+            }else if(isIdentifier(ch)){
+                column++;
+                sb.append(ch);
+            }else{
+                cursor--;
+                tokens.add(new Token(Token.Type.ID, sb.toString(), row, column));
                 return;
-            case '-':
-                tokens.add(new Token(Token.Type.AOP, "-", line, pos));
-                return;
-            case '*':
-                tokens.add(new Token(Token.Type.AOP, "*", line, pos));
-                return;
-            case '/':
-                tokens.add(new Token(Token.Type.AOP, "/", line, pos));
-                return;
+            }
         }
     }
-
 
     //-----------------------------------------------------------------------------------------
 
-
     public void lex() throws IOException, LexException {
-        int ch;
         while(true){
             eatSpace();
-            ch = nextChar();
-            if(ch == -1){
-                return;
-            }
-            switch ((char)ch){
-                case ';':
-                    pos++;
-                    tokens.add(new Token(Token.Type.SEMI, ";", line, pos));
+            char ch = getNext();
+            if(eof){ return; }
+            switch (ch){
+                case ';': case ',':
+                case '{': case '}':
+                case '[': case ']':
+                case '(': case ')':
+                case ':':
+                    tokens.add(new Token(Token.Type.PUNCTUATION, String.valueOf(ch), row, ++column));
                     break;
-                /**
-                 *      bracket...
-                 */
-                case '{':
-                    pos++;
-                    tokens.add(new Token(Token.Type.BRA, "{", line, pos));
+                case '+':
+                case '*': case '/':
+                case '~': case '.':
+                    tokens.add(new Token(Token.Type.OPERATOR, String.valueOf(ch), row, ++column));
                     break;
-                case '}':
-                    pos++;
-                    tokens.add(new Token(Token.Type.BRA, "}", line, pos));
+                case '-':
+                    if (peekNext() == '-') {
+                        lexInlineComment();
+                    } else {
+                        tokens.add(new Token(Token.Type.OPERATOR, String.valueOf(ch), row, ++column));
+                    }
                     break;
-                case '(':
-                    pos++;
-                    tokens.add(new Token(Token.Type.BRA, "(", line, pos));
+                case '=':
+                    if (peekNext() == '>') {
+                        getNext();
+                        column += 2;
+                        tokens.add(new Token(Token.Type.OPERATOR, "=>", row, column));
+                    } else {
+                        tokens.add(new Token(Token.Type.OPERATOR, String.valueOf(ch), row, ++column));
+                    }
                     break;
-                case ')':
-                    pos++;
-                    tokens.add(new Token(Token.Type.BRA, ")", line, pos));
+                case '>': case '<':
+                    if (peekNext() == '=') {
+                        getNext();
+                        column += 2;
+                        tokens.add(new Token(Token.Type.OPERATOR, ch + "=", row, column));
+                    } else if (ch == '<' && peekNext() == '-') {
+                        getNext();
+                        column += 2;
+                        tokens.add(new Token(Token.Type.OPERATOR, "<-", row, column));
+                    }
+                    else {
+                        tokens.add(new Token(Token.Type.OPERATOR, String.valueOf(ch), row, ++column));
+                    }
                     break;
-
-                case '|':
-                    pos++;
-                    tokens.add(new Token(Token.Type.LOP, "|", line, pos));
-                    break;
-
-                case '&':
-                    pos++;
-                    tokens.add(new Token(Token.Type.LOP, "&", line, pos));
-                    break;
-
-                /**
-                 *      string ...
-                 */
-
                 case '"':
-                    cursor--;
-                    strGenerate();
+                    column++;
+                    lexString();
                     break;
-
-                /**
-                 *      number first then identifier to simplify checking process...
-                 */
                 default:
-                    cursor--;
-                    if(isLogicalOperator((char)ch)){
-                        logGenerator();
-                    }else if(isArithmeticOperator((char)ch)){
-                        ariGenerator();
-                    } else if(isNumber((char)ch)){
-                        numGenerate();
-                    }else if(isIdentifier((char)ch)) {
-                        idGenerate();
+                    column++;
+                    if(isNumber(ch)){
+                        lexNumber(ch);
+                    }else if(isIdentifier(ch)) {
+                        lexID(ch);
                     }else{
-                        throw new LexException("Unexpected character '" + (char)ch + "' at line " + line + " pos " + pos + " !");
+                        throw new LexException("Unexpected character '" + ch + "' at row " + row + " column " + column + " !");
                     }
             }
         }

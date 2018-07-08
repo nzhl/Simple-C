@@ -1,41 +1,53 @@
 package front.lex;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 public class Token {
+    private static final HashSet<String> KEYWORD_LIST
+        = new HashSet<>(Arrays.asList(
+        "class", "inherits",
+        "if", "then", "else", "fi",
+        "while", "loop", "pool",
+        "let", "in",
+        "case", "of", "esac",
+        "new", "isvoid",
+        "not", "true", "false"
+    ));
+
     public enum Type{
-        //-------------------------> variable type ,assign, logical operator, arithmetic operator, relational operator, bracket, semicolon
-        IF, ELSE, WHILE, ID, NUM, BOOL, STR, TYPE, ASSIGN, LOP, AOP, ROP, BRA, SEMI, PRINT
+        /**
+         *  enumerate the type of tokens
+         */
+        ID, KEYWORD, NUMBER, STRING, OPERATOR, PUNCTUATION;
     }
 
     public Type type;
     public String value;
-    public int line;
-    public int pos;
+    public int number;
+    public int row;
+    public int column;
 
-    public Token(Type type, String value, int line, int pos) {
-        if(type == Type.ID && value.equals("if")){
-            this.type = Type.IF;
-        }else if(type == Type.ID && value.equals("else")){
-            this.type = Type.ELSE;
-        }else if(type == Type.ID && value.equals("while")){
-            this.type = Type.WHILE;
-        }else if(type == Type.ID && (value.equals("int") || value.equals("bool") || value.equals("string"))){
-            this.type = Type.TYPE;
-        }else if(type == Type.ID && (value.equals("True") || value.equals("False"))){
-            this.type = Type.BOOL;
-        }else if(type == type.ID && value.equals("print")){
-            this.type = Type.PRINT;
-        } else {
-            this.type = type;
+    Token(Type type, String value, int row, int column) {
+        this.type = type;
+        if(type == Type.ID && KEYWORD_LIST.contains(value)){
+            this.type = Type.KEYWORD;
         }
 
         this.value = value;
-        this.line = line;
-        this.pos = pos - value.length();
+        this.row = row;
+        this.column = column - value.length();
     }
 
+    Token(int number, int row, int column) {
+        this.type = Type.NUMBER;
+        this.number = number;
+        this.row = row;
+        this.column = column - String.valueOf(number).length();
+    }
 
     @Override
     public String toString() {
-        return type + "("+ value +")" + "("+ line + ", " + pos +")";
+        return type + "("+ (type == Type.NUMBER ? number:value) +")" + "("+ row + ", " + column +")";
     }
 }
