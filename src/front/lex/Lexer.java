@@ -180,7 +180,7 @@ public class Lexer{
                 case ':':
                     tokens.add(new Token(Token.Type.PUNCTUATION, String.valueOf(ch), row, ++column));
                     break;
-                case '+':
+                case '+': case '@':
                 case '*': case '/':
                 case '~': case '.':
                     tokens.add(new Token(Token.Type.OPERATOR, String.valueOf(ch), row, ++column));

@@ -4,6 +4,15 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public class Token {
+    public enum Type{
+        /**
+         *  enumerate the type of tokens
+         */
+        ID, KEYWORD, NUMBER, STRING, OPERATOR, PUNCTUATION, EOF;
+    }
+
+    public static final Token EOF = new Token(Type.EOF, "",  0, 0);
+
     private static final HashSet<String> KEYWORD_LIST
         = new HashSet<>(Arrays.asList(
         "class", "inherits",
@@ -15,18 +24,12 @@ public class Token {
         "not", "true", "false"
     ));
 
-    public enum Type{
-        /**
-         *  enumerate the type of tokens
-         */
-        ID, KEYWORD, NUMBER, STRING, OPERATOR, PUNCTUATION;
-    }
 
-    public Type type;
-    public String value;
-    public int number;
-    public int row;
-    public int column;
+    private Type type;
+    private String value;
+    private int number;
+    private int row;
+    private int column;
 
     Token(Type type, String value, int row, int column) {
         this.type = type;
@@ -49,5 +52,24 @@ public class Token {
     @Override
     public String toString() {
         return type + "("+ (type == Type.NUMBER ? number:value) +")" + "("+ row + ", " + column +")";
+    }
+
+    public boolean sameAs(Token token) {
+        if (token == null) {
+            return false;
+        }
+        return this.type == token.type && this.value == token.value;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public int getNumber() {
+        return number;
     }
 }

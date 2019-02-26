@@ -1,424 +1,355 @@
 package front.parse;
 
-import front.ast.Fun;
-import front.ast.judge.Id;
-import front.ast.Type;
-import front.ast.judge.*;
-import front.ast.stmt.*;
-import front.ast.value.Bool;
-import front.ast.value.Int;
-import front.ast.value.Str;
 import front.lex.Token;
+import front.parse.ast.*;
+import front.parse.ast.Class;
+
 import java.util.ArrayList;
-import static front.ast.Type.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Parser {
-//    private ArrayList<Token> tokens;
-//    private int length;
-//    private int index;
-//    private Fun fun;
-//
-//    public Parser(ArrayList<Token> tokens) {
-//        this.tokens = tokens;
-//        length = tokens.size();
-//        index = 0;
-//    }
-//
-//    private Token nextToken(){
-//        if(index == length){
-//            return null;
-//        }else {
-//            return tokens.get(index++);
-//        }
-//    }
-//
-//    private Type typeJudge(Token token){
-//        switch (token.value){
-//            case "int":
-//                return Int;
-//            case "bool":
-//                return Bool;
-//            case "string":
-//                return Str;
-//            default:
-//                return null;
-//        }
-//    }
-//
-//    //--------------------------------------------parse--------------------------------------------------------
-//
-//    public Fun parse() throws ParseException {
-//        fun = funParse();
-//        while(nextToken() != null){
-//            index--;
-//            fun.add(funParse());
-//        }
-//        return fun;
-//    }
-//
-//    private Fun funParse() throws ParseException {
-//        Token token = nextToken();
-//        Type type;
-//        String id;
-//        Stmt stmt;
-//
-//        /**
-//         *      func -> type id () block
-//         */
-//
-//        if(token.type != Token.Type.TYPE){
-//            throw new ParseException("expected function return type in line : " + token.line + " pos : " + token.pos + " !");
-//        }else {
-//            type = typeJudge(token);
-//        }
-//
-//        token = nextToken();
-//        if(token.type != Token.Type.ID){
-//            throw new ParseException("expected function name in line : " + token.line + " pos : " + token.pos + " !");
-//        }else{
-//            id = token.value;
-//        }
-//
-//        token = nextToken();
-//        if(!token.value.equals("(")){
-//            throw new ParseException("expected left bracket in line : " + token.line + " pos : " + token.pos + " !");
-//        }
-//        token = nextToken();
-//        if(!token.value.equals(")")){
-//            throw new ParseException("expected right bracket in line : " + token.line + " pos : " + token.pos + " !");
-//        }
-//
-//        stmt = blockParse();
-//
-//        Fun fun = new Fun(type, id, stmt);
-//        return fun;
-//    }
-//
-//    private Stmt blockParse() throws ParseException {
-//        Stmt stmt;
-//        Token token = nextToken();
-//        if(!token.value.equals("{")){
-//            throw new ParseException("expected left bracket in line : " + token.line + " pos : " + token.pos + " !");
-//        }
-//
-//        stmt = stmtsParse();
-//
-//        token = nextToken();
-//        if(!token.value.equals("}")){
-//            throw new ParseException("expected right bracket in line : " + token.line + " pos : " + token.pos + " !");
-//        }
-//
-//        return stmt;
-//    }
-//
-//    private Stmt stmtsParse() throws ParseException {
-//        Stmt stmt = stmtParse();
-//        while(!nextToken().value.equals("}")){
-//            index--;
-//            stmt.add(stmtParse());
-//        }
-//        index--;
-//        return stmt;
-//    }
-//
-//    private Stmt stmtParse() throws ParseException {
-//        /**
-//
-//         stmt -> type id;
-//         | type id = judge;
-//         | id = judge;
-//         | if(judge) block
-//         | if(judge) block else block
-//         | while(judge) block
-//         | print id;
-//         | print num;
-//         | print boolean;
-//         | print str;
-//
-//         */
-//
-//        Token token = nextToken();
-//        if (token.type == Token.Type.TYPE) {
-//            Type type = typeJudge(token);
-//            Id id;
-//            Judge judge;
-//            // defStmt
-//
-//            token = nextToken();
-//            if (token.type != Token.Type.ID) {
-//                throw new ParseException("expected id in line : " + token.line + " pos : " + token.pos + " !");
-//            } else {
-//                id = new Id(type, token.value);
-//                token = nextToken();
-//                if (token.type == Token.Type.SEMI) {
-//                    return new Def(id, null);
-//                } else if (token.value.equals("=")) {
-//                    judge = judgeParse();
-//                    token = nextToken();
-//                    if (token.type != Token.Type.SEMI) {
-//                        throw new ParseException("expected semicolon in line : " + token.line + " pos : " + token.pos + " !");
-//                    }
-//                    return new Def(id, judge);
-//                } else {
-//                    throw new ParseException("Parsing error in line : " + token.line + " pos : " + token.pos + " !");
-//                }
-//            }
-//        } else if (token.type == Token.Type.ID) {
-//            Id id = new Id(null, token.value);
-//            token = nextToken();
-//            if (!token.value.equals("=")) {
-//                throw new ParseException("Expected '=' in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//            Assign assign = new Assign(id, judgeParse());
-//            token = nextToken();
-//            if (!token.value.equals(";")) {
-//                throw new ParseException("expected semicolon in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//            return assign;
-//        } else if (token.value.equals("while")) {
-//            token = nextToken();
-//            if (!token.value.equals("(")) {
-//                throw new ParseException("expected left bracket in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//
-//            Judge condition = judgeParse();
-//
-//            token = nextToken();
-//            if (!token.value.equals(")")) {
-//                throw new ParseException("expected right bracket in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//            return new While(condition, blockParse());
-//
-//        } else if (token.value.equals("print")) {
-//            token = nextToken();
-//            if (token.type == Token.Type.ID) {
-//                Id id = new Id(typeJudge(token), token.value);
-//                token = nextToken();
-//                if (!token.value.equals(";")) {
-//                    throw new ParseException("expected ; in line : " + token.line + " pos : " + token.pos + " !");
-//                }
-//                return new Print(Print.InnerType.Pid, id.getName());
-//            } else if (token.type == Token.Type.NUM || token.type == Token.Type.STR || token.type == Token.Type.BOOL) {
-//                String str = token.value;
-//                token = nextToken();
-//                if (!token.value.equals(";")) {
-//                    throw new ParseException("expected ; in line : " + token.line + " pos : " + token.pos + " !");
-//                }
-//                return new Print(Print.InnerType.Pvalue, str);
-//
-//            } else {
-//                throw new ParseException("Print error in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//        } else if (token.value.equals("if")) {
-//            token = nextToken();
-//            if (!token.value.equals("(")) {
-//                throw new ParseException("expected left bracket in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//
-//            Judge condition = judgeParse();
-//
-//            token = nextToken();
-//            if (!token.value.equals(")")) {
-//                throw new ParseException("expected right bracket in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//
-//            Stmt then = blockParse();
-//
-//            token = nextToken();
-//            if (token.value.equals("else")) {
-//                return new If(condition, then, blockParse());
-//            }
-//
-//            index--;
-//            return new If(condition, then, null);
-//        }
-//        throw new ParseException("Parsing error bracket in line : " + token.line + " pos : " + token.pos + " !");
-//    }
-//
-//    //------------------------------------------------- judge --------------------------------------------------
-//
-//    private Judge judgeParse() throws ParseException {
-//        Judge re = joinParse();
-//        Token token = nextToken();
-//        while (token.value.equals("|")){
-//            re = new Or(re, joinParse());
-//            token = nextToken();
-//        }
-//        index--;
-//        return re;
-//    }
-//
-//    private Judge joinParse() throws ParseException {
-//        Judge re = equalityParse();
-//        Token token = nextToken();
-//        while (token.value.equals("&")){
-//            re = new And(re, joinParse());
-//            token = nextToken();
-//        }
-//        index--;
-//        return re;
-//    }
-//
-//    private Judge equalityParse() throws ParseException {
-//        Judge re = relParse();
-//        Token token = nextToken();
-//        while (token.value.equals("==") || token.value.equals("!=")){
-//            if(token.value.equals("==")){
-//                re = new Equal(re, relParse());
-//            }else{
-//                re = new Not(new Equal(re, relParse()));
-//            }
-//            token = nextToken();
-//        }
-//        index--;
-//        return re;
-//    }
-//
-//    private Judge relParse() throws ParseException {
-//        Judge re = exprParse();
-//        Token token = nextToken();
-//        if(token.type == Token.Type.ROP) {
-//            switch (token.value) {
-//                case ">=":
-//                    return new Ge(re, exprParse());
-//                case "<=":
-//                    return new Le(re, exprParse());
-//                case ">":
-//                    return new G(re, exprParse());
-//                case "<":
-//                    return new L(re, exprParse());
-//                default:
-//                    throw new ParseException("Parsing error in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//        }else{
-//            index--;
-//            return re;
-//        }
-//    }
-//
-//    //------------------------------------------------- expr --------------------------------------------------
-//
-//    private Judge exprParse() throws ParseException {
-//        Judge re = termParse();
-//        Token token = nextToken();
-//        while(token.value.equals("+") || token.value.equals("-")){
-//            if(token.value.equals("+")){
-//                re = new Add(re, termParse());
-//            }else{
-//                re = new Minus(re, termParse());
-//            }
-//            token = nextToken();
-//        }
-//        index--;
-//        return re;
-//    }
-//
-//    private Judge termParse() throws ParseException {
-//        Judge re = unaryParse();
-//        Token token = nextToken();
-//        while(token.value.equals("*") || token.value.equals("/")){
-//            if(token.value.equals("*")){
-//                re = new Times(re, unaryParse());
-//            }else{
-//                re = new Division(re, unaryParse());
-//            }
-//            token = nextToken();
-//        }
-//        index--;
-//        return re;
-//    }
-//
-//    private Judge unaryParse() throws ParseException {
-//        Judge re;
-//        Token token = nextToken();
-//        if(token.value.equals("!")){
-//            re = new Not(unaryParse());
-//        }else if(token.value.equals("-")){
-//            re = new Negative(unaryParse());
-//        }else{
-//            index--;
-//            re = factorParse();
-//        }
-//        return re;
-//    }
-//
-//    private Judge factorParse() throws ParseException {
-//        Token token = nextToken();
-//        if(token.type == Token.Type.NUM){
-//            return new Int(token.value);
-//        }else if(token.type == Token.Type.BOOL){
-//            return new Bool(token.value);
-//        }else if(token.type == Token.Type.STR){
-//            return new Str(token.value);
-//        }else if(token.type == Token.Type.ID){
-//            return new Id(typeJudge(token), token.value);
-//        }else if(token.value.equals("(")){
-//            Judge judge = judgeParse();
-//            token = nextToken();
-//            if(!token.value.equals(")")) {
-//                throw new ParseException("expected right bracket in line : " + token.line + " pos : " + token.pos + " !");
-//            }
-//            return judge;
-//        }else{
-//            throw new ParseException("Parsing error in line : " + token.line + " pos : " + token.pos + " !");
-//        }
-//    }
-//
-//    //---------------------------------------  pretty print ---------------------------------------------
-//
-//    static public void printFun(Fun fun){
-//        Fun cur = fun;
-//        while(cur != null){
-//            System.out.println(cur.type + " " + cur.id + "()" + "{");
-//            printStmts(cur.stmt);
-//            System.out.println("}");
-//            cur = cur.next;
-//        }
-//    }
-//
-//    static private void printStmts(Stmt stmt){
-//        while(stmt != null){
-//            printStmt(stmt);
-//            stmt = stmt.next;
-//        }
-//    }
-//
-//    static public void printStmt(Stmt stmt){
-//        switch (stmt.kind){
-//            case AssignStmt:
-//                Assign assign = (Assign)stmt;
-//                System.out.println(assign.getId() + " = " + assign.getJudge());
-//                break;
-//            case DefStmt:
-//                Def def = (Def)stmt;
-//                System.out.println(def.getId() + " = " + def.getJudge());
-//                break;
-//            case IfStmt:
-//                If iff = (If) stmt;
-//                System.out.println("if(" + iff.getCondition() + "){");
-//                printStmts(iff.getThen());
-//                System.out.println("}");
-//                System.out.println("else{");
-//                printStmts(iff.getOtherwise());
-//                System.out.println("}");
-//                break;
-//            case WhileStmt:
-//                While wh = (While)stmt;
-//                System.out.println("while(" + wh.getCondition() + "){");
-//                printStmts(wh.getThen());
-//                System.out.println("}");
-//                break;
-//            case PrintStmt:
-//                Print print = (Print)stmt;
-//                String str = "print : ";
-//                if(print.getInnerType() == Print.InnerType.Pid) {
-//                    str += "id :";
-//                }
-//                str += print.getName();
-//                System.out.println(str);
-//        }
-//    }
+    private ArrayList<Token> tokens;
+    private ArrayList<Class> program;
+    private int cursor;
+
+    public Parser(ArrayList<Token> tokens) {
+        this.tokens = tokens;
+        program = new ArrayList<>();
+        cursor = 0;
+    }
+
+    public ArrayList<Class> getProgram() {
+        return program;
+    }
+
+    private Token getNext(){
+        if(cursor == tokens.size()){
+            return Token.EOF;
+        }else {
+            return tokens.get(cursor++);
+        }
+    }
+    private Token peekNext(){
+        if(cursor == tokens.size()){
+            return Token.EOF;
+        }else {
+            return tokens.get(cursor);
+        }
+    }
+
+    private void checkNext(Token.Type type, String value) throws ParseException {
+        Token token = peekNext();
+        if (token.getType() != type || !token.getValue().equals(value)) {
+            throw new ParseException("Expected "+ type + " \"" + value + "\", but got " + peekNext());
+        }
+        getNext();
+    }
+    //--------------------------------------------parse--------------------------------------------------------
+    public void parse() throws ParseException {
+        do {
+            Class curClass = parseClass();
+            checkNext(Token.Type.PUNCTUATION, ";");
+            program.add(curClass);
+        } while ("class".equals(peekNext().getValue()));
+    }
+
+    private Class parseClass() throws ParseException {
+        checkNext(Token.Type.KEYWORD, "class");
+        String className = parseID();
+        String classParent = null;
+        HashMap<String, Attribute> attributes = new HashMap<>();
+        HashMap<String, Method> methods= new HashMap<>();
+
+        if ("inherits".equals(peekNext().getValue())) {
+            getNext();
+            classParent = parseID();
+        }
+        checkNext(Token.Type.PUNCTUATION, "{");
+
+        // parse feature >= 0
+        while (peekNext().getType() == Token.Type.ID) {
+            String name = parseID();
+            if(":".equals(peekNext().getValue())) {
+                // attribute definition
+
+                getNext();
+                String type = parseID();
+                Expression value = null;
+                if ("<-".equals(peekNext().getValue())) {
+                    getNext();
+                    value = parseExpr();
+                }
+                attributes.put(name, new Attribute(name, type, value));
+            } else  {
+                // method definition
+                ArrayList<Attribute> params = new ArrayList<>();
+                String returnType;
+                Expression body;
+                checkNext(Token.Type.PUNCTUATION, "(");
+                if (! ")".equals(peekNext().getValue())) {
+                    while (true) {
+                        Attribute param = parseFormal();
+                        params.add(param);
+                        if (",".equals(peekNext().getValue())) {
+                            checkNext(Token.Type.PUNCTUATION, ",");
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                checkNext(Token.Type.PUNCTUATION, ")");
+                checkNext(Token.Type.PUNCTUATION, ":");
+                returnType = parseID();
+                checkNext(Token.Type.PUNCTUATION, "{");
+                body = parseExpr();
+                checkNext(Token.Type.PUNCTUATION, "}");
+                methods.put(name, new Method(name, params, returnType, body));
+            }
+            checkNext(Token.Type.PUNCTUATION, ";");
+        }
+
+        checkNext(Token.Type.PUNCTUATION, "}");
+        return new Class(className, classParent, attributes, methods);
+    }
+
+    private Attribute parseFormal() throws ParseException {
+        String id = parseID();
+        checkNext(Token.Type.PUNCTUATION, ":");
+        String type = parseID();
+        return new Attribute(id, type);
+    }
+
+    private Expression parseExprPrime4() throws ParseException {
+        Expression leftSide = null;
+        Token token = peekNext();
+        if (token.getType() == Token.Type.ID) {
+            String name = parseID();
+            if ("<-".equals(peekNext().getValue())) {
+                // id <- expr
+                checkNext(Token.Type.OPERATOR, "<-");
+                leftSide =  new Assignment(name, parseExpr());
+            } else if ("(".equals(peekNext().getValue())) {
+                // id([expr (,expr)*])
+                checkNext(Token.Type.PUNCTUATION, "(");
+                ArrayList<Expression> arguments = new ArrayList<>();
+                if (!")".equals(peekNext().getValue())) {
+                    arguments.add(parseExpr());
+                    while (",".equals(peekNext().getValue())) {
+                        checkNext(Token.Type.PUNCTUATION, ",");
+                        arguments.add(parseExpr());
+                    }
+                }
+                checkNext(Token.Type.PUNCTUATION, ")");
+                leftSide =  new Invocation(null, null, name, arguments);
+            } else {
+                // id
+                leftSide =  new Literal(3, name);
+            }
+        } else if ("if".equals(token.getValue())) {
+            // if expr then expr else expr fi
+            checkNext(Token.Type.KEYWORD, "if");
+            Expression condition = parseExpr();
+            checkNext(Token.Type.KEYWORD, "then");
+            Expression thenBody = parseExpr();
+            checkNext(Token.Type.KEYWORD, "else");
+            Expression elseBody = parseExpr();
+            checkNext(Token.Type.KEYWORD, "fi");
+            leftSide =  new IfStatement(condition, thenBody, elseBody);
+        } else if ("while".equals(token.getValue())) {
+            checkNext(Token.Type.KEYWORD, "while");
+            Expression condition = parseExpr();
+            checkNext(Token.Type.KEYWORD, "loop");
+            Expression body = parseExpr();
+            checkNext(Token.Type.KEYWORD, "pool");
+            leftSide =  new WhileStatement(condition, body);
+        } else if ("{".equals(token.getValue())) {
+            // { (expr;)+ }
+            checkNext(Token.Type.PUNCTUATION, "{");
+            ArrayList<Expression> expressions = new ArrayList<>();
+            expressions.add(parseExpr());
+            checkNext(Token.Type.PUNCTUATION, ";");
+            while (!"}".equals(peekNext().getValue())) {
+                expressions.add(parseExpr());
+                checkNext(Token.Type.PUNCTUATION, ";");
+            }
+            checkNext(Token.Type.PUNCTUATION, "}");
+            leftSide =  new Expressions(expressions);
+        } else if ("let".equals(token.getValue())) {
+            // let ID : Type [<-expr] (, ID: type [<- expr])* in expr
+            HashMap<String, Attribute> variables = new HashMap<>();
+            Expression body;
+            checkNext(Token.Type.KEYWORD, "let");
+            String name = parseID();
+            checkNext(Token.Type.PUNCTUATION, ":");
+            String type = parseID();
+            Expression value = null;
+            if ("<-".equals(peekNext().getValue())) {
+                checkNext(Token.Type.OPERATOR, "<-");
+                value = parseExpr();
+            }
+            variables.put(name, new Attribute(name, type, value));
+            while (",".equals(peekNext().getValue())) {
+                checkNext(Token.Type.PUNCTUATION, ",");
+                name = parseID();
+                checkNext(Token.Type.PUNCTUATION, ":");
+                type = parseID();
+                if ("<-".equals(peekNext().getValue())) {
+                    checkNext(Token.Type.OPERATOR, "<-");
+                    value = parseExpr();
+                } else {
+                    value = null;
+                }
+                variables.put(name, new Attribute(name, type, value));
+            }
+            checkNext(Token.Type.KEYWORD, "in");
+            body = parseExpr();
+            leftSide =  new LetStatement(variables, body);
+        } else if ("case".equals(token.getValue())) {
+            // case Expr of (id: type => expr ;)+ esac
+            checkNext(Token.Type.KEYWORD, "case");
+            Expression expression = parseExpr();
+            checkNext(Token.Type.KEYWORD, "of");
+            HashMap<Attribute, Expression> patterns = new HashMap<>();
+            String name = parseID();
+            checkNext(Token.Type.PUNCTUATION, ":");
+            String type = parseID();
+            checkNext(Token.Type.OPERATOR, "=>");
+            patterns.put(new Attribute(name, type), parseExpr());
+            checkNext(Token.Type.PUNCTUATION, ";");
+            while (!"esac".equals(peekNext().getValue())) {
+                name = parseID();
+                checkNext(Token.Type.PUNCTUATION, ":");
+                type = parseID();
+                checkNext(Token.Type.OPERATOR, "=>");
+                patterns.put(new Attribute(name, type), parseExpr());
+                checkNext(Token.Type.PUNCTUATION, ";");
+            }
+            checkNext(Token.Type.KEYWORD, "esac");
+            leftSide =  new CaseStatement(expression, patterns);
+        } else if ("new".equals(token.getValue())) {
+            checkNext(Token.Type.KEYWORD, "new");
+            String type = parseID();
+            leftSide =  new NewStatement(type);
+        } else if ("isvoid".equals(token.getValue())) {
+            checkNext(Token.Type.KEYWORD, "isvoid");
+            leftSide =  new IsvoidStatement(parseExpr());
+        } else if ("~".equals(token.getValue())) {
+            checkNext(Token.Type.OPERATOR, "~");
+            leftSide = new NegativeStatement(parseExpr());
+        } else if ("not".equals(token.getValue())) {
+            checkNext(Token.Type.KEYWORD, "not");
+            leftSide =  new NotStatement(parseExpr());
+        } else if ("(".equals(token.getValue())) {
+            checkNext(Token.Type.PUNCTUATION, "(");
+            Expression expression = parseExpr();
+            checkNext(Token.Type.PUNCTUATION, ")");
+            leftSide =  new BracketStatement(expression);
+        } else if (token.getType() == Token.Type.NUMBER) {
+            getNext();
+            leftSide =  new Literal(token.getNumber());
+        } else if (token.getType() == Token.Type.STRING) {
+            getNext();
+            leftSide =  new Literal(1, token.getValue());
+        } else if ("true".equals(token.getValue()) || "false".equals(token.getValue())) {
+            checkNext(Token.Type.KEYWORD, token.getValue());
+            leftSide =  new Literal(2, token.getValue());
+        } else {
+            throw new ParseException("Unknow token " + peekNext() + "!");
+        }
+        return leftSide;
+    }
+
+    private Expression parseExpr() throws ParseException {
+        Expression leftSide = parseExprPrime1();
+        ArrayList<String> list =  new ArrayList<>(Arrays.asList("<=", ">=", "<", ">", "="));
+        while (list.contains(peekNext().getValue())) {
+            if ("<=".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.LE, leftSide, parseExprPrime1());
+            } else if ("<".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.LT, leftSide, parseExprPrime1());
+            } else if (">=".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.GE, leftSide, parseExprPrime1());
+            } else if (">".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.GT, leftSide, parseExprPrime1());
+            } else {
+                // ("=".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.EQ, leftSide, parseExprPrime1());
+            }
+        }
+        return leftSide;
+    }
+
+    private Expression parseExprPrime1() throws ParseException {
+        Expression leftSide = parseExprPrime2();
+        ArrayList<String> list =  new ArrayList<>(Arrays.asList("+", "-"));
+        while (list.contains(peekNext().getValue())) {
+            if ("+".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.ADD, leftSide, parseExprPrime2());
+            } else {
+                // ("-".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.MINUS, leftSide, parseExprPrime2());
+            }
+        }
+        return leftSide;
+    }
+
+    private Expression parseExprPrime2() throws ParseException {
+        Expression leftSide = parseExprPrime3();
+        ArrayList<String> list =  new ArrayList<>(Arrays.asList("+", "-"));
+        while (list.contains(peekNext().getValue())) {
+            if ("*".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.TIMES, leftSide, parseExprPrime3());
+            } else {
+                // if ("/".equals(peekNext().getValue())) {
+                getNext();
+                leftSide = new Operator(Operator.OP.DIVISION, leftSide, parseExprPrime3());
+            }
+        }
+        return leftSide;
+    }
+
+    private Expression parseExprPrime3() throws ParseException {
+        // expr[@type].ID([expr (,expr)*])
+        Expression leftSide = parseExprPrime4();
+
+        while ("@".equals(peekNext().getValue()) || ".".equals(peekNext().getValue())) {
+            String asType = null;
+            if ("@".equals(peekNext().getValue())) {
+                getNext();
+                asType = parseID();
+            }
+            checkNext(Token.Type.OPERATOR, ".");
+            String methodName = parseID();
+            ArrayList<Expression> arguments = new ArrayList<>();
+            checkNext(Token.Type.PUNCTUATION, "(");
+            if (!")".equals(peekNext().getValue())) {
+                arguments.add(parseExpr());
+                while (",".equals(peekNext().getValue())) {
+                    getNext();
+                    arguments.add(parseExpr());
+                }
+            }
+            checkNext(Token.Type.PUNCTUATION, ")");
+            leftSide =  new Invocation(leftSide, asType, methodName, arguments);
+        }
+        return leftSide;
+    }
+
+    private String parseID() throws ParseException {
+        Token token = peekNext();
+        if (peekNext().getType() != Token.Type.ID) {
+            throw new ParseException("Expected type but got " + token);
+        }
+        return getNext().getValue();
+    }
 }
-
-
-
