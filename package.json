@@ -1,0 +1,20 @@
+{
+  "name": "Simple-C",
+  "version": "1.0.0",
+  "description": "欢迎感兴趣的小伙伴联系我, 博客地址 : http://www.cnblogs.com/nzhl/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nzhl/Simple-C.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nzhl/Simple-C/issues"
+  },
+  "homepage": "https://github.com/nzhl/Simple-C#readme"
+}
